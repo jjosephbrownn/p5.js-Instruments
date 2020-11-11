@@ -12,7 +12,7 @@ P5.js has a rather complicated system for setting up a sequencer, but this setup
 
 For example we might have an array which looks like:
 ```
-Let pattern1 = [1,2,1,0,1,2];
+let pattern1 = [1,2,1,0,1,2];
 ```
 the sequencer will read the first step (1) and pass that to the function.  This value can be used for anything but in this I use it as a "position" value and the sample is played from 1s (NOTE: annoyingly, p5 works in SECONDS not ms so 1 = 1 second.  This is baffling and weird by what you gonna do).  The sequencer then goes on to the second step (2).  This happens until we hit step 3 (starting from 0) with a zero; the sequencer simply waits until the next beat.  Sequencers run off a bpm value which controls the read-through speed and can be set with a setBPM() method.
 
