@@ -8,7 +8,7 @@ P5 also requires a server to be working.  The one I use is [Web Server for Chrom
 
 Each instrument comes with the object file (the instrument), an example JS file (the program) and an example HTML file ("the page").  p5 is a little like React.js in that an HTML file works as a sort of "empty" vessel which is drawn into by the JS file.  You can obviously add other stuff in the HTML (and p5 has a great DOM system) but for these examples all you need is a file with the correct <head> links and the <script> which points to the example JS file.  This latter does all of the work and renders into the browser window. Neat.
 
-Each instrument is a so-called "object".  This is an external file which you reference in your JS code.  The "name" of the object is the wrapper function in the object file.  For example, the glitchy sampler object is wrapped in a function called "fracture" so that is the name you reference in your code.  It is instantiated with "new" and, in some instances, can be supplied with arguments for initial setup:
+Each instrument is a so-called "object".  This is an external file which you reference in your JS code.  The "name" of the object is the wrapper function in the object file.  For example, the glitchy sampler object is wrapped in a function called "fracture" so that is the name you reference in your code.  It is instantiated with "new" and, in some instances, can be supplied with arguments for initial setup.  If you're working in p5 then this is best done in the setup() part.  If you're not then I guess you can do what you want:
 ```
 let zillophone = new lifeform("carbon-based","silicon-based");
 zillophone.bringLove();
