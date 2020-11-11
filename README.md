@@ -1,5 +1,5 @@
 # p5.js-Instruments
-A repo of unusual soundmakers and synths for p5.js
+## A repo of unusual soundmakers and synths for p5.js
 
 This repo serves as documentation and round about explanation of some of the processes I used to create the sound environment [The Dream Lens](dreamlens.netlify.app), the code for which can be accessed in [this repo](https://github.com/jjosephbrownn/TheDreamLens).
 
