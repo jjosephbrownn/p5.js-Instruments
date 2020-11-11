@@ -13,14 +13,17 @@
 let samples = [ 
 	//put your soundfile links here!
 	//see the p5 helpfiles for stuff about file types
-]
+];
 
 function fracture(){ //arguments here could define sample types or parameter settings.  I usually have a couple of arrays of different samples (voice,percussion etc)
-
 	//choose and load sounds
 	let sound1, sound2
-	sound1 = loadSound(samples[round(random(sample.length-1))])
-	sound2 = loadSound(samples[round(random(sample.length-1))])
+	let file1,file2
+
+	file1 = round(random(samples.length-1))
+	file2 = round(random(samples.length-1))
+	sound1 = loadSound(samples[file1])
+	sound2 = loadSound(samples[file2])
 
 	//initialise effects n that
 	let filt1 = new p5.LowPass()
@@ -48,10 +51,11 @@ function fracture(){ //arguments here could define sample types or parameter set
 	filt2.disconnect()
 	filt1.connect(master)
 	filt2.connect(master)
-	master.amp(0.25) //master volume control
+	master.amp(0.5) //master volume control
 
 	//sequence initialising, these have to have some sort of initial value otherwise confusion occurs
 	let pace         //bpm or speed
+	let dur1,dur2    //duration of each soundfile, called below
 	let pats1 = [0]	 //pattern 1
 	let pats2 = [0]	 
 	let durs1 = [0]  //sequence of durations 1
@@ -147,7 +151,6 @@ function fracture(){ //arguments here could define sample types or parameter set
 		}
 	}
 
-
 	//stops the looping
 	this.fracStop = function(src){
 		if(src === 0){
@@ -185,6 +188,7 @@ function fracture(){ //arguments here could define sample types or parameter set
 		}
 	}
 
+	
 	//same as above but just plays from the beginning of the sample
 	this.samplePlayCont = function(src,pan){
 		if(src === 0){
@@ -222,8 +226,98 @@ function fracture(){ //arguments here could define sample types or parameter set
 			sound2.loop(0,1,0.5,0)
 		}				
 	}
+	//adds a step and value to the sequencer
+	//src routes the data
+	//pat is the value to be added to the end of the sequence
+	//i guess you could write a function that allows you to change specific steps
+	this.add = function(src,pat){
+		if(src === 0){								
+			pats1[pat1pos] = pat 					//adds value to end of pattern array
+			samp1.replaceSequence("samp1",pats1)	//adds newly updated pattern to the Part
+			pat1pos++								//increments count (total length) ready for next time
+			if(pat1pos === 16){pat1pos = 0}			//if the count goes above a threshold reset to 0
+		} else if(src === 1){
+			pats2[pat2pos] = pat
+			samp2.replaceSequence("samp2",pats2)
+			pat2pos++
+			if(pat2pos === 16){pat2pos = 0}
+		} 
+	}
 
-	//plays both samples on their independent sequences but in parallel fifths (look at the "rate" method)
+	//clears patterns
+	this.init = function(src) {
+		if(src === 0){
+			if(pats1.length<16){
+				pats1 = []
+				samp1.replaceSequence("samp1",pats1)
+			} else {
+				return null
+			}
+		} else if(src === 1){
+			if(pats2.length<16){
+				pats2 = []
+				samp2.replaceSequence("samp2",pats2)
+			} else {
+				return null
+			}
+		} 
+	}
+
+	//removes the last step from a pattern
+	this.del = function(src){
+		if(src === 0){
+			pats1.pop()
+			samp1.replaceSequence("samp1",pats1)
+		} else if(src === 1){
+			pats2.pop()
+			samp2.replaceSequence("samp2",pats2)
+		}
+	}
+
+
+	//sets some delay params, not super useful tbh
+	this.delay = function(src,del,fdbk){
+		if(src === 0){
+			del1.process(sound1,del,fdbk,500)
+		} else if (src === 1){
+			del2.process(sound2,del,fdbk,500)
+		}
+	}
+
+	//sets filter params
+	this.filt = function(src,f,r){ //which filter, frequency, resonance
+		if(src === 0){
+			filt1.set(f,r)
+		} else if (src === 1){
+			filt2.set(f,r)
+		}
+	}
+
+	//sets sample pan
+	this.panner = function(src,p){
+		if(src === 0){
+			s1.pan(p)
+		} else if (src === 1){
+			s2.pan(p)
+		}
+	}
+
+	//returns the duration of the sample
+	//REQUIRED if you want to do lots of skipping
+	//p5 often needs an "end point" to work with
+	//i call this in the setup() portion after a delay of about 2s to allow the samples to load (using setTimeout())
+	//if you call this before the sample loads it will return 0
+	this.length1 = function(){
+		dur1 = sound1.duration()
+		return(dur1)
+	}
+
+	this.length2 = function(){
+		dur2 = sound2.duration()
+		return(dur2)
+	}
+
+		//plays both samples on their independent sequences but in parallel fifths (look at the "rate" method)
 	//THIS WON'T WORK STRAIGHT OUT THE BOX
 	//this function requires each sample to be doubled (loaded twice into two separate arguments)
 
@@ -261,53 +355,34 @@ function fracture(){ //arguments here could define sample types or parameter set
 // 			place2++
 // 			if(place2 === pats2.length-1){place2 = 0}
 // 		}
-	}
+//	}
 
-	//sets some delay params, not super useful tbh
-	this.delay = function(src,del,fdbk){
-		if(src === 0){
-			del1.process(sound1,del,fdbk,500)
-		} else if (src === 1){
-			del2.process(sound2,del,fdbk,500)
+	//sets the effect params
+	//i call this in setup()
+	//its all randomised because i haven't got time to pull numbers out my arse
+	//these are some good starting values
+	//rate is by default set to 1 for every step
+	//sometimes i add a conditional statement which instead has a random rate generator
+	//for this i use the type argument (otherwise unused)
+	//if type === 0 then all rates = 1
+	//if type === 1 then all rates = random
+	//recommend calling this after a delay in the setup() to allow for the samples to load
+	this.params = function(type){
+		for(i=0;i<16;i++){
+			filt1Pat[i] = Math.random()*10000
+			rate1Pat[i] = 1
+			del1Pat[i] = Math.random()
+			fdbk1Pat[i] = Math.random()*0.5
+			durs1[i] = Math.random()*dur1
+
+			filt2Pat[i] = Math.random()*10000
+			rate2Pat[i] = 1
+			del2Pat[i] = Math.random()
+			fdbk2Pat[i] = Math.random()*0.5
+			durs2[i] = Math.random()*dur2
 		}
 	}
 
-	//sets filter params
-	this.filt = function(src,f,r){ //which filter, frequency, resonance
-		if(src === 0){
-			filt1.set(f,r)
-		} else if (src === 1){
-			filt2.set(f,r)
-		}
-	}
-
-	//sets sample pan
-	this.panner = function(src,p){
-		if(src === 0){
-			s1.pan(p)
-		} else if (src === 1){
-			s2.pan(p)
-		}
-	}
-
-	//returns the duration of the sample
-	//REQUIRED if you want to do lots of skipping
-	//p5 often needs an "end point" to work with
-	//i call this in the setup() portion after a delay of about 2s to allow the samples to load (using setTimeout())
-	//if you call this before the sample loads it will return 0
-	this.dur1 = function(){
-		return(s1.duration())
-	}
-
-	this.dur2 = function(){
-		return(s2.duration())
-	}
-
-	//the sequencer function!
-	//this is the callback mentioned in the "phrase" portion above
-	//start is the argument passed by the "phrase" above - it will be the value of the current index of your pattern
-	//time is a time stamp sent by the "phrase" and is useful for really accurate beat mapping
-	//I don't use it that much but you must declare it if you're passing stuff to the callback 
 	function seq1(time,start){ 
 		filt1.freq(filt1Pat[place1])
 
@@ -335,79 +410,9 @@ function fracture(){ //arguments here could define sample types or parameter set
 		place2++
 		if(place2 === pats2.length-1){place2 = 0}
 	}
-	
-	//adds a step and value to the sequencer
-	//src routes the data
-	//pat is the value to be added to the end of the sequence
-	//i guess you could write a function that allows you to change specific steps
-	this.add = function(src,pat){
-		if(src === 0){								
-			pats1[pat1pos] = pat 					//adds value to end of pattern array
-			samp1.replaceSequence("samp1",pats1)	//adds newly updated pattern to the Part
-			pat1pos++								//increments count (total length) ready for next time
-			if(pat1pos === 16){pat1pos = 0}			//if the count goes above a threshold reset to 0
-		} else if(src === 1){
-			pats2[pat2pos] = pat
-			samp2.replaceSequence("samp2",pats2)
-			pat2pos++
-			if(pat2pos === 16){pat2pos = 0}
-		} 
-	}
 
-	//clears patterns
-	this.clear = function(src) {
-		if(src === 0){
-			if(pats1.length<16){
-				pats1 = []
-				samp1.replaceSequence("samp1",pats1)
-			} else {
-				return null
-			}
-		} else if(src === 1){
-			if(pats2.length<16){
-				pats2 = []
-				samp2.replaceSequence("samp2",pats2)
-			} else {
-				return null
-			}
-		} 
-	}
 
-	//removes the last step from a pattern
-	this.del = function(src){
-		if(src === 0){
-			pats1.pop()
-			samp1.replaceSequence("samp1",pats1)
-		} else if(src === 1){
-			pats2.pop()
-			samp2.replaceSequence("samp2",pats2)
-		}
-	}
-
-	//sets the effect params
-	//i call this in setup()
-	//its all randomised because i haven't got time to pull numbers out my arse
-	//these are some good starting values
-	//rate is by default set to 1 for every step
-	//sometimes i add a conditional statement which instead has a random rate generator
-	//for this i use the type argument (otherwise unused)
-	//if type === 0 then all rates = 1
-	//if type === 1 then all rates = random
-	this.params = function(type){
-		for(i=0;i<16;i++){
-			filt1Pat[i] = Math.random()*10000
-			rate1Pat[i] = 1
-			del1Pat[i] = Math.random()
-			fdbk1Pat[i] = Math.random()*0.5
-
-			filt2Pat[i] = Math.random()*10000
-			rate2Pat[i] = 1
-			del2Pat[i] = Math.random()
-			fdbk2Pat[i] = Math.random()*0.5
-		}
-	}
 }
-
 
 
 	
