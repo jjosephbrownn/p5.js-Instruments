@@ -2,6 +2,24 @@ let sampler
 let sampleDur1, sampleDur2
 let toggle = true
 
+//dumb animation stolen from the p5 site ;)
+let xpos, ypos; 
+let xspeed = 2.8;
+let yspeed = 2.2; 
+
+let xdirection = 1; 
+let ydirection = 1; 
+
+let a = 0
+let b,c,d
+let instructions = [
+	"Click LEFT mouse to play sound 1",
+	"Click RIGHT mouse to play sound 2",
+	"Press ENTER to add steps",
+	"Press RIGHT ARROW to change BPM",
+	"Press LEFT ARROW to change play mode"
+]
+
 function setup(){
 	createCanvas(windowWidth,windowHeight)
 	background(100)
@@ -13,6 +31,10 @@ function setup(){
 		sampleDur1 = sampler.length1() //finding the durations of the two samples
 		sampleDur2 = sampler.length2()
 	},2000)  						   //all after 2 seconds to allow for loading
+
+    frameRate(30);
+    xpos = width / 2;
+    ypos = height / 2;
 }
 
 //gonna use some class p5 functions here
@@ -75,4 +97,33 @@ function keyPressed(){
 			toggle = true
 		}
 	} 
+}
+
+//you can ignore this - its just stupid messages
+function draw(){
+	background(0);
+	textFont("Courier New")
+	textSize(25)
+	textStyle(BOLD)
+	fill(b,c,d,255)
+
+    xpos = xpos + xspeed * xdirection;
+    ypos = ypos + yspeed * ydirection;
+
+	if (xpos > width-200 || xpos < 0) {
+		xdirection *= -1;
+		a = round(random(0,instructions.length-1))
+		b = round(random(0,255))
+		c = round(random(0,255))
+		d = round(random(0,255))
+	}
+	if (ypos > height-100 || ypos < 0) {
+		ydirection *= -1;
+		a = round(random(0,instructions.length-1))
+		b = round(random(0,255))
+		c = round(random(0,255))
+		d = round(random(0,255))
+	}
+	text(instructions[a],xpos,ypos,200,200)
+	text("noice",ypos,xpos)
 }
